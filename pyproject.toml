@@ -19,6 +19,7 @@ dependencies = [
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
     "sqlalchemy>=2.1.1",
+    "sqlmodel>=0.0.48",
     "typer>=0.27.2",
     "uvicorn>=0.54.0",
 ]
@@ -30,3 +31,6 @@ dev = [
     "ruff>=0.16.9",
     "ty>=0.0.84",
 ]
+
+[tool.fastapi]
+entrypoint = "sgcc_webp.app:app"
