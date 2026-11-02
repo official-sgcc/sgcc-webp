@@ -13,6 +13,7 @@ class ScheduleBase(SQLModel):
     start_date: datetime            #시작 시간
     end_date: datetime              #종료 시간
     info: str | None = None         #일정 설명
+    group_id: UUID = Field(foreign_key="group.group_id", index=True)
 
 class Schedule(ScheduleBase, table=True):
     schedule_id: UUID = Field(default_factory=uuid4, primary_key=True)

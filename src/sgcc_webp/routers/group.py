@@ -3,10 +3,11 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 from ..internal.database import SessionDep
 from ..models.group import Group, GroupPublic, GroupList, GroupResponse, GroupPost, BaseResponse
+from .schedule import Schedule
 
-router = APIRouter(prefix="/v1/group")
+group_router = APIRouter(prefix="/v1/group")
 
-@router.get("/list", response_model=GroupList)
+@group_router.get("/list", response_model=GroupList)
 def get_group_list(
     session: SessionDep,
     page_size: int = 20,
@@ -22,7 +23,7 @@ def get_group_list(
 
     return GroupList(data=[GroupPublic.model_validate(group) for group in groups])
 
-@router.get("/{group_id}", response_model=GroupResponse)
+@group_router.get("/{group_id}", response_model=GroupResponse)
 def get_group(
     session: SessionDep,
     group_id: UUID
@@ -34,7 +35,7 @@ def get_group(
 
     return GroupResponse(data=GroupPublic.model_validate(group))
 
-@router.post("/", response_model=GroupResponse)
+@group_router.post("/", response_model=GroupResponse)
 def create_group(
     session: SessionDep,
     group: GroupPost
@@ -47,7 +48,7 @@ def create_group(
 
     return GroupResponse(data=GroupPublic.model_validate(group_db))
 
-@router.post("/{group_id}", response_model=GroupResponse)
+@group_router.post("/{group_id}", response_model=GroupResponse)
 def update_group(
     session: SessionDep,
     group_id: UUID,
@@ -68,7 +69,7 @@ def update_group(
 
     return GroupResponse(data=GroupPublic.model_validate(group_db))
 
-@router.delete("/{group_id}", response_model=BaseResponse)
+@group_router.delete("/{group_id}", response_model=BaseResponse)
 def delete_group(
     session: SessionDep,
     group_id: UUID
@@ -77,6 +78,13 @@ def delete_group(
 
     if group is None:
         raise HTTPException(status_code=404, detail="group not found")
+
+    results = session.exec(
+        select(Schedule, Group).where(Schedule.group_id == Group.group_id)
+    )
+
+    for schedule, dump in results:
+        session.delete(schedule)
 
     session.delete(group)
     session.commit()

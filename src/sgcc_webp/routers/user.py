@@ -3,10 +3,12 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select, or_, col
 from ..internal.database import SessionDep
 from ..models.user import User, UserPublic, UserStatus, UserList, UserResponse, UserPost, BaseResponse
+from ..models.group import Group
+from ..models.user_group_link import UserGroupLink
 
-router = APIRouter(prefix="/v1/user")
+user_router = APIRouter(prefix="/v1/user")
 
-@router.get("/list", response_model=UserList)
+@user_router.get("/list", response_model=UserList)
 def get_user_list(
     session: SessionDep,
     keyword: str | None = None,         #검색어
@@ -37,10 +39,10 @@ def get_user_list(
     if role is not None:
         user_db = user_db.where(User.role == role)
 
-    users = list(session.exec(user_db).all())
-
     if group is not None:
-        users = [user for user in users if group in user.group_id]
+        user_db = user_db.join(UserGroupLink).join(Group).where(Group.group_id == group)
+
+    users = list(session.exec(user_db).all())
 
     start = (page - 1) * page_size
     end = page * page_size
@@ -48,7 +50,7 @@ def get_user_list(
 
     return UserList(data=[UserPublic.model_validate(user) for user in users])
 
-@router.get("/{user_id}", response_model=UserResponse)
+@user_router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     session: SessionDep,
     user_id: UUID
@@ -60,7 +62,7 @@ def get_user(
 
     return UserResponse(data=UserPublic.model_validate(user))
 
-@router.post("/{user_id}", response_model=UserResponse)
+@user_router.post("/{user_id}", response_model=UserResponse)
 def post_user(
     session: SessionDep,
     user_id: UUID,
@@ -81,7 +83,7 @@ def post_user(
 
     return UserResponse(data=UserPublic.model_validate(user_db))
 
-@router.delete("/{user_id}", response_model=BaseResponse)
+@user_router.delete("/{user_id}", response_model=BaseResponse)
 def delete_user(
     session: SessionDep,
     user_id: UUID
