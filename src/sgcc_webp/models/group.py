@@ -9,11 +9,6 @@ if TYPE_CHECKING:
     from .user import User
     from .schedule import Schedule
 
-class BaseResponse(BaseModel):
-    error: str = ""
-    code: int = 200
-    data: Any
-
 class GroupType(Enum):
     CLUB = "소모임"
     PROJECT = "프로젝트"
@@ -35,9 +30,3 @@ class GroupPublic(GroupBase):
 
 class GroupPost(GroupBase):
     pass
-
-class GroupList(BaseResponse):
-    data: list[GroupPublic]
-
-class GroupResponse(BaseResponse):
-    data: GroupPublic

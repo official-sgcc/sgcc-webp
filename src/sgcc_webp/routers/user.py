@@ -2,13 +2,28 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select, or_, col
 from ..internal.database import SessionDep
-from ..models.user import User, UserPublic, UserStatus, UserList, UserResponse, UserPost, BaseResponse
+from ..models.user import User, UserStatus, UserPost
 from ..models.group import Group
 from ..models.user_group_link import UserGroupLink
+from ..models.response import UserResponse, UserListResponse, UserDetail, BaseResponse
 
 user_router = APIRouter(prefix="/v1/user")
 
-@user_router.get("/list", response_model=UserList)
+#테스트용 임시 유처 추가
+@user_router.post("/", response_model=UserResponse)
+def create_group(
+    session: SessionDep,
+    user: UserPost
+):
+    user_db = User.model_validate(user)
+
+    session.add(user_db)
+    session.commit()
+    session.refresh(user_db)
+
+    return UserResponse(data=UserDetail.model_validate(user_db))
+
+@user_router.get("/list", response_model=UserListResponse)
 def get_user_list(
     session: SessionDep,
     keyword: str | None = None,         #검색어
@@ -48,7 +63,7 @@ def get_user_list(
     end = page * page_size
     users = users[start:end]
 
-    return UserList(data=[UserPublic.model_validate(user) for user in users])
+    return UserListResponse(data=[UserDetail.model_validate(user) for user in users])
 
 @user_router.get("/{user_id}", response_model=UserResponse)
 def get_user(
@@ -60,7 +75,7 @@ def get_user(
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return UserResponse(data=UserPublic.model_validate(user))
+    return UserResponse(data=UserDetail.model_validate(user))
 
 @user_router.post("/{user_id}", response_model=UserResponse)
 def post_user(
@@ -81,7 +96,7 @@ def post_user(
     session.commit()
     session.refresh(user_db)
 
-    return UserResponse(data=UserPublic.model_validate(user_db))
+    return UserResponse(data=UserDetail.model_validate(user_db))
 
 @user_router.delete("/{user_id}", response_model=BaseResponse)
 def delete_user(
@@ -96,8 +111,4 @@ def delete_user(
     session.delete(user)
     session.commit()
 
-    return {
-        "error": "",
-        "code": 200,
-        "data": ""
-    }
+    return BaseResponse(data="")

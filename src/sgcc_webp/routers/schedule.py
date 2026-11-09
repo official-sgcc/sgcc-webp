@@ -2,12 +2,13 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 from ..internal.database import SessionDep
-from ..models.schedule import Schedule, SchedulePublic, ScheduleList, ScheduleResponse, SchedulePost, BaseResponse
+from ..models.schedule import Schedule, SchedulePublic, SchedulePost
 from ..models.group import Group
+from ..models.response import ScheduleResponse, ScheduleListResponse, BaseResponse
 
 schedule_router = APIRouter(prefix="/v1/group/{group_id}/schedule")
 
-@schedule_router.get("/", response_model=ScheduleList)       #group_id의 모든 일정 get
+@schedule_router.get("/", response_model=ScheduleListResponse)       #group_id의 모든 일정 get
 def get_schedule(
     session: SessionDep,
     group_id: UUID,
@@ -25,7 +26,7 @@ def get_schedule(
     end = page * page_size
     schedules = schedules[start:end]
     
-    return ScheduleList(data=[SchedulePublic.model_validate(schedule) for schedule in schedules])
+    return ScheduleListResponse(data=[SchedulePublic.model_validate(schedule) for schedule in schedules])
 
 @schedule_router.post("/", response_model=ScheduleResponse)
 def create_schedule(
@@ -87,8 +88,4 @@ def delete_schedule(
     session.delete(schedule)
     session.commit()
 
-    return {
-        "error": "",
-        "code": 200,
-        "data": ""
-    }
+    return BaseResponse(data="")

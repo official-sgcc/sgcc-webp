@@ -9,11 +9,6 @@ from .user_group_link import UserGroupLink
 if TYPE_CHECKING:
     from .group import Group
 
-class BaseResponse(BaseModel):
-    error: str = ""
-    code: int = 200
-    data: Any
-
 class UserStatus(Enum):
     ENROLLED = "재학"
     LEAVE = "휴학"
@@ -37,9 +32,3 @@ class UserPublic(UserBase):
 
 class UserPost(UserBase):
     pass
-
-class UserList(BaseResponse):
-    data: list[UserPublic]
-
-class UserResponse(BaseResponse):
-    data: UserPublic

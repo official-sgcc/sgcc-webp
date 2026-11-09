@@ -2,12 +2,13 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 from ..internal.database import SessionDep
-from ..models.group import Group, GroupPublic, GroupList, GroupResponse, GroupPost, BaseResponse
+from ..models.group import Group, GroupPost
 from .schedule import Schedule
+from ..models.response import GroupResponse, GroupListResponse, GroupDetail, BaseResponse
 
 group_router = APIRouter(prefix="/v1/group")
 
-@group_router.get("/list", response_model=GroupList)
+@group_router.get("/list", response_model=GroupListResponse)
 def get_group_list(
     session: SessionDep,
     page_size: int = 20,
@@ -21,7 +22,7 @@ def get_group_list(
     end = page * page_size
     groups = groups[start:end]
 
-    return GroupList(data=[GroupPublic.model_validate(group) for group in groups])
+    return GroupListResponse(data=[GroupDetail.model_validate(group) for group in groups])
 
 @group_router.get("/{group_id}", response_model=GroupResponse)
 def get_group(
@@ -33,7 +34,7 @@ def get_group(
     if group is None:
         raise HTTPException(status_code=404, detail="group not found")
 
-    return GroupResponse(data=GroupPublic.model_validate(group))
+    return GroupResponse(data=GroupDetail.model_validate(group))
 
 @group_router.post("/", response_model=GroupResponse)
 def create_group(
@@ -46,7 +47,7 @@ def create_group(
     session.commit()
     session.refresh(group_db)
 
-    return GroupResponse(data=GroupPublic.model_validate(group_db))
+    return GroupResponse(data=GroupDetail.model_validate(group_db))
 
 @group_router.post("/{group_id}", response_model=GroupResponse)
 def update_group(
@@ -67,7 +68,7 @@ def update_group(
     session.commit()
     session.refresh(group_db)
 
-    return GroupResponse(data=GroupPublic.model_validate(group_db))
+    return GroupResponse(data=GroupDetail.model_validate(group_db))
 
 @group_router.delete("/{group_id}", response_model=BaseResponse)
 def delete_group(
@@ -87,8 +88,4 @@ def delete_group(
     session.delete(group)
     session.commit()
 
-    return {
-        "error": "",
-        "code": 200,
-        "data": ""
-    }
+    return BaseResponse(data="")
