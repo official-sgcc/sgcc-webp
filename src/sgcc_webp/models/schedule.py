@@ -7,11 +7,6 @@ from datetime import datetime
 if TYPE_CHECKING:
     from .group import Group
 
-class BaseResponse(BaseModel):
-    error: str = ""
-    code: int = 200
-    data: Any
-
 class ScheduleBase(SQLModel):
     start_date: datetime            #시작 시간
     end_date: datetime              #종료 시간
@@ -27,9 +22,3 @@ class SchedulePublic(ScheduleBase):
 
 class SchedulePost(ScheduleBase):
     group_id: UUID | None = None
-
-class ScheduleList(BaseResponse):
-    data: list[SchedulePublic]
-
-class ScheduleResponse(BaseResponse):
-    data: SchedulePublic
