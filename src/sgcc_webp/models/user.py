@@ -15,7 +15,7 @@ class UserStatus(Enum):
 
 class UserBase(SQLModel):
     name: str                                           #이름
-    student_id: str                                     #학번
+    student_id: str = Field(unique=True)                #학번
     grade: int                                          #학년
     phone: str | None = Field(default=None)             #전화번호
     status: UserStatus = Field(index=True)              #학적
@@ -31,3 +31,9 @@ class UserPublic(UserBase):
 
 class UserPost(UserBase):
     pass
+
+class UserAccount(SQLModel, table=True):
+    user_id: UUID = Field(primary_key=True, foreign_key="user.id")
+    student_id: str = Field(index=True, unique=True)
+    hashed_password: str
+    

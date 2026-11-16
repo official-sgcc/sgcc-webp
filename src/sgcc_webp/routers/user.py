@@ -1,25 +1,18 @@
 from uuid import UUID
 from fastapi import APIRouter
 from ..internal.database import SessionDep
-from ..models.user import User, UserStatus, UserPost
-from ..models.response import UserResponse, UserListResponse, UserDetail, BaseResponse
+from ..models.user import UserStatus, UserPost
+from ..models.response import UserResponse, UserListResponse, BaseResponse, UserSignUp
 from ..internal import user as user_internal
 
 user_router = APIRouter(prefix="/v1/user")
 
-#테스트용 임시 유저 추가
-@user_router.post("/", response_model=UserResponse)
-def create_group(
+@user_router.post("/signup", response_model=UserResponse) #url 미확정
+def user_sign_up(
     session: SessionDep,
-    user: UserPost
+    user_data: UserSignUp
 ):
-    user_db = User.model_validate(user)
-
-    session.add(user_db)
-    session.commit()
-    session.refresh(user_db)
-
-    return UserResponse(data=UserDetail.model_validate(user_db))
+    return UserResponse(data=user_internal.user_sign_up(session=session, user_data=user_data))
 
 @user_router.get("/list", response_model=UserListResponse)
 def get_user_list(

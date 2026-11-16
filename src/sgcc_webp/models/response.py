@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Any
 
-from .user import UserPublic
+from .user import UserPublic, UserStatus
 from .group import GroupPublic
 from .schedule import SchedulePublic
 
@@ -34,3 +34,13 @@ class ScheduleListResponse(BaseResponse):
 
 class ScheduleResponse(BaseResponse):
     data: SchedulePublic
+
+class UserSignUp(BaseModel):
+    name: str
+    student_id: str
+    grade: int
+    phone: str | None
+    status: UserStatus
+    role: str | None
+    image: str | None
+    password: str
