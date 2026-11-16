@@ -9,12 +9,9 @@ repos:
   rev: v0.14.11
   hooks:
     - id: ruff-check
-      args: ["src/", "--fix"]
-      pass_filenames: false
+      args: ["--fix"]
       types_or: [ python, pyi ]
     - id: ruff-format
-      args: ["src/"]
-      pass_filenames: false
       types_or: [ python, pyi ]
 
 - repo: local
@@ -23,5 +20,6 @@ repos:
       name: ty check
       entry: uv run ty check src/
       language: system
+      files: ^src/
       pass_filenames: false
       types_or: [ python, pyi ]
