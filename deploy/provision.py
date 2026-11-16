@@ -59,6 +59,7 @@ class Proxmox:
             headers={
                 "Authorization": self.authorization,
                 "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "sgcc-jenkins-deploy/1.0",
             },
         )
         try:
