@@ -15,7 +15,7 @@ COPY src ./src
 RUN uv sync --locked --no-dev --no-editable
 
 
-FROM python:3.13-slim
+FROM python:3.13-slim-bookworm
 
 ENV PORT=8080 \
     HOST=0.0.0.0 \
@@ -30,11 +30,15 @@ RUN useradd --create-home --shell /bin/bash appuser && \
     mkdir -p /data && \
     chown -R appuser:appuser /data
 
-WORKDIR /app
+# The application opens database.db relative to its working directory.
+WORKDIR /data
 COPY --from=builder /opt/venv /opt/venv
 USER appuser
 
 EXPOSE $PORT
 VOLUME ["/data"]
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+    CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.environ.get('UVICORN_PORT', '8080') + '/health/', timeout=2)"
 
 CMD ["uvicorn", "sgcc_webp:app"]
