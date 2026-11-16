@@ -37,7 +37,8 @@ fi
 ssh_options=(
     -i "$SSH_KEY" -l "$SSH_USER"
     -o BatchMode=yes -o IdentitiesOnly=yes
-    -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$KNOWN_HOSTS"
+    # OpenSSH parses this value again; preserve spaces in Jenkins credential paths.
+    -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=\"$KNOWN_HOSTS\""
     -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=3
 )
 
