@@ -1,10 +1,9 @@
 from uuid import UUID
-from fastapi import APIRouter, HTTPException
-from sqlmodel import select
+from fastapi import APIRouter
 from ..internal.database import SessionDep
-from ..models.group import Group, GroupPost
-from .schedule import Schedule
-from ..models.response import GroupResponse, GroupListResponse, GroupDetail, BaseResponse
+from ..models.group import GroupPost
+from ..models.response import GroupResponse, GroupListResponse, BaseResponse
+from ..internal import group as group_internal
 
 group_router = APIRouter(prefix="/v1/group")
 
@@ -14,40 +13,21 @@ def get_group_list(
     page_size: int = 20,
     page: int = 1
 ):
-    group_db = select(Group)
-    
-    groups = list(session.exec(group_db).all())
-
-    start = (page - 1) * page_size
-    end = page * page_size
-    groups = groups[start:end]
-
-    return GroupListResponse(data=[GroupDetail.model_validate(group) for group in groups])
+    return GroupListResponse(data=group_internal.get_group_list(session=session, page_size=page_size, page=page))
 
 @group_router.get("/{group_id}", response_model=GroupResponse)
 def get_group(
     session: SessionDep,
     group_id: UUID
 ):
-    group = session.get(Group, group_id)
-
-    if group is None:
-        raise HTTPException(status_code=404, detail="group not found")
-
-    return GroupResponse(data=GroupDetail.model_validate(group))
+    return GroupResponse(data=group_internal.get_group(session=session, group_id=group_id))
 
 @group_router.post("/", response_model=GroupResponse)
 def create_group(
     session: SessionDep,
     group: GroupPost
 ):
-    group_db = Group.model_validate(group)
-
-    session.add(group_db)
-    session.commit()
-    session.refresh(group_db)
-
-    return GroupResponse(data=GroupDetail.model_validate(group_db))
+    return GroupResponse(data=group_internal.create_group(session=session, group=group))
 
 @group_router.post("/{group_id}", response_model=GroupResponse)
 def update_group(
@@ -55,37 +35,13 @@ def update_group(
     group_id: UUID,
     group: GroupPost
 ):
-    group_db = session.get(Group, group_id)
-
-    if group_db is None:
-        raise HTTPException(status_code=404, detail="group not found")
-
-    update_group = group.model_dump(exclude_unset=True)
-
-    group_db.sqlmodel_update(update_group)
-
-    session.add(group_db)
-    session.commit()
-    session.refresh(group_db)
-
-    return GroupResponse(data=GroupDetail.model_validate(group_db))
+    return GroupResponse(data=group_internal.update_group(session=session, group_id=group_id, group=group))
 
 @group_router.delete("/{group_id}", response_model=BaseResponse)
 def delete_group(
     session: SessionDep,
     group_id: UUID
 ):
-    group = session.get(Group, group_id)
-
-    if group is None:
-        raise HTTPException(status_code=404, detail="group not found")
-
-    schedules = group.schedules
-
-    for schedule in schedules:
-        session.delete(schedule)
-
-    session.delete(group)
-    session.commit()
-
+    group_internal.delete_group(session=session, group_id=group_id)
+    
     return BaseResponse(data="")
