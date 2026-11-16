@@ -1,13 +1,16 @@
 # Jenkins deployment
 
 The backend and frontend each have a root `Jenkinsfile`. Either job can create
-the same unprivileged Debian LXC through the Proxmox REST API; a fixed VMID and
-ownership marker identify it on later runs. There is no Terraform state or
+the same unprivileged Ubuntu 26.04 LTS LXC through the Proxmox REST API; a
+fixed VMID and ownership marker identify it on later runs. There is no Terraform state or
 image registry. Both jobs acquire the Jenkins lock `sgcc-web-lxc` before
 provisioning or deploying, and the guest also locks container replacements.
 
 | Setting | Value |
 | --- | --- |
+| VMID | `120` |
+| Proxmox API | `https://console.sgcc-wiki.org` |
+| OS template | `local:vztmpl/ubuntu-26.04-standard_26.04-1_amd64.tar.zst` |
 | Private address | `10.30.0.6/24` |
 | VNet / gateway / MTU | `sgcapps` / `10.30.0.1` / `1450` |
 | DNS | `163.239.1.1` |
@@ -16,7 +19,7 @@ provisioning or deploying, and the guest also locks container replacements.
 | Backend | `http://10.30.0.6:8080`, health at `/health/` |
 | Frontend | `http://10.30.0.6:8081`, health at `/healthz` |
 
-The node, template, storage, network, DNS and MTU defaults match
+The node, storage, network, DNS and MTU defaults match
 `sgcc_server_iac/config/sgcc_server.yml` at implementation time. Verify them
 against the running cluster. The application containers and Docker share the
 LXC's total 500 MiB budget; compilation and zstd compression run on Jenkins.
@@ -42,8 +45,9 @@ The pipeline polls Git every five minutes. Deployments run only for `main` /
 credentials. For private GitHub repositories, configure SCM read credentials in
 each job separately.
 
-Set `PVE_URL` and `LXC_VMID` in **both Jenkinsfiles**, keeping all shared-LXC
-settings identical. Choose a free VMID and reserve `10.30.0.6`. Use a Proxmox
+Both Jenkinsfiles use VMID `120` and the HTTPS API URL above. Confirm that
+VMID `120` is free and reserve `10.30.0.6`; keep shared-LXC settings identical
+if you change either pipeline. Use a Proxmox
 API URL reachable from the **worker**; `https://localhost:8006` only works with
 a worker-local forwarding tunnel. TLS verification is enabled. For a private
 Proxmox CA, install its trusted CA on the worker or configure the worker's
@@ -82,8 +86,8 @@ Grant the API user and token the necessary rights on the selected VMID:
 `VM.Config.Network`, `VM.Config.Disk`, and `VM.Config.Options`. Grant
 `Datastore.Audit` / `Datastore.AllocateSpace` on the relevant template and root
 disk storage, and `SDN.Use` for the `sgcapps` VNet. Apply grants to both the
-underlying user and privilege-separated token. The Debian template must
-already exist in Proxmox storage. No root password or host SSH access is used.
+underlying user and privilege-separated token. The Ubuntu 26.04 LTS template
+must already exist in Proxmox storage. No root password or host SSH access is used.
 
 ### First host-key enrollment
 
@@ -118,6 +122,8 @@ The API helper creates a new guest stopped, verifies the completed task and
 configuration, then starts it. Existing guests must match the ownership marker,
 node, network and resource budget. Mismatches fail without adopting, resizing,
 recreating or deleting another guest. The pipeline never destroys an LXC.
+Changing the template applies to newly created guests; it does not upgrade an
+existing Debian or older Ubuntu guest. The bootstrap requires Ubuntu 26.04 LTS.
 
 Creation enables **nesting only** and keeps **keyctl disabled**. Proxmox blocks
 keyctl with `ENOSYS`; current runc tolerates that result during startup. The
@@ -126,7 +132,9 @@ manual feature change. See [runc's implementation](https://github.com/opencontai
 and [Proxmox's seccomp implementation](https://github.com/proxmox/pve-container/blob/master/src/PVE/LXC.pm).
 
 Over verified guest SSH, `bootstrap.sh` installs Docker from Docker's official
-Debian APT repository and installs zstd if missing. It then streams the image:
+Ubuntu APT repository and installs zstd if missing, following the
+[official Docker Ubuntu instructions](https://docs.docker.com/engine/install/ubuntu/).
+It then streams the image:
 
 ```text
 Jenkins: docker image save | zstd -1 -T0 --stdout

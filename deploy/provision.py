@@ -126,11 +126,11 @@ def settings():
         raise ValueError("Invalid LXC_MTU.")
     template = required("PVE_TEMPLATE")
     if not re.fullmatch(
-        r"[\w.-]+:vztmpl/debian-1[23]-standard_[\w.-]+_amd64\.tar\.(?:zst|xz|gz)",
+        r"[\w.-]+:vztmpl/ubuntu-26\.04-standard_[\w.-]+_amd64\.tar\.(?:zst|xz|gz)",
         template,
     ):
         raise ValueError(
-            "PVE_TEMPLATE must name an existing Debian 12/13 amd64 standard template."
+            "PVE_TEMPLATE must name an existing Ubuntu 26.04 LTS amd64 standard template."
         )
     public_key = Path(required("SSH_PUBLIC_KEY_FILE")).read_text().strip()
     if "\n" in public_key or not re.match(
@@ -144,7 +144,7 @@ def settings():
         "hostname": "sgcc-web",
         "description": MARKER,
         "ostemplate": template,
-        "ostype": "debian",
+        "ostype": "ubuntu",
         "arch": "amd64",
         "unprivileged": 1,
         # runc tolerates ENOSYS when keyctl is blocked; no root-only feature flag.
@@ -192,6 +192,11 @@ def ensure_lxc(api, node, vmid, desired):
     if config.get("lock") or config.get("template"):
         raise RuntimeError(
             "The shared LXC is locked or is a template; inspect it before retrying."
+        )
+    if config.get("ostype") != desired["ostype"]:
+        raise RuntimeError(
+            "Existing LXC OS differs from the Ubuntu configuration; use a fresh VMID "
+            "or migrate the guest manually. Nothing was replaced."
         )
     for name in ("unprivileged", "cores", "cpulimit", "memory", "swap", "onboot"):
         if float(config.get(name, -1)) != desired[name]:
