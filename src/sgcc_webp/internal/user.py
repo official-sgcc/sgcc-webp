@@ -1,11 +1,36 @@
 from uuid import UUID
 from sqlmodel import select, or_, col
 from .database import SessionDep
-from ..models.user import User, UserStatus, UserPost
+from .auth import get_password_hash
+from ..models.user import User, UserStatus, UserPost, UserAccount
 from ..models.group import Group
 from ..models.user_group_link import UserGroupLink
-from ..models.response import UserDetail
+from ..models.response import UserDetail, UserSignUp
 from fastapi import HTTPException
+
+def user_sign_up(
+    session: SessionDep,
+    user_data: UserSignUp
+):
+    db_user_id = session.exec(select(User.id).where(User.student_id == user_data.student_id)).first
+
+    if db_user_id is not None:
+        raise HTTPException(status_code=409, detail="Student ID already exists")
+    
+    user = User.model_validate(user_data)
+
+    session.add(user)
+    session.flush()
+
+    hashed_password = get_password_hash(user_data.password)
+
+    user_account = UserAccount(user_id=user.id, student_id=user.student_id, hashed_password=hashed_password)
+
+    session.add(user_account)
+    session.commit()
+    session.refresh(user)
+
+    return UserDetail.model_validate(user)
 
 def get_user_list(
     session: SessionDep,
