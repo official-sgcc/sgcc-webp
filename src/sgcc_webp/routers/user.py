@@ -7,13 +7,6 @@ from ..internal import user as user_internal
 
 user_router = APIRouter(prefix="/v1/user")
 
-@user_router.post("/signup", response_model=UserResponse) #url 미확정
-def user_sign_up(
-    session: SessionDep,
-    user_data: UserSignUp
-):
-    return UserResponse(data=user_internal.user_sign_up(session=session, user_data=user_data))
-
 @user_router.get("/list", response_model=UserListResponse)
 def get_user_list(
     session: SessionDep,
