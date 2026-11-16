@@ -45,7 +45,13 @@ run_options=(
 )
 if [[ $service == sgcc-webp ]]; then
     ensure_owned volume sgcc-webp-data
-    run_options+=(--mount 'type=volume,source=sgcc-webp-data,target=/data')
+    # Zoraxy strips /api and forwards the public HTTPS scheme from 10.20.0.11.
+    run_options+=(
+        --mount 'type=volume,source=sgcc-webp-data,target=/data'
+        --env UVICORN_ROOT_PATH=/api
+        --env UVICORN_PROXY_HEADERS=true
+        --env FORWARDED_ALLOW_IPS=10.20.0.11
+    )
 fi
 
 previous="$service-previous"

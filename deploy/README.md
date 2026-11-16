@@ -171,6 +171,19 @@ Configure your external proxy to send frontend traffic to `10.30.0.6:8081` and
 on the same origin. The frontend container only serves static files and SPA
 fallbacks; it does not configure your external proxy.
 
+The backend deployment sets `UVICORN_ROOT_PATH=/api` and enables proxy headers,
+trusting only Zoraxy at `10.20.0.11` (`FORWARDED_ALLOW_IPS`). Preserve the public
+`Host` and send `X-Forwarded-Proto: https` from Zoraxy for HTTPS requests.
+This keeps redirects under `/api` with the correct scheme and makes Swagger
+load `/api/openapi.json`. If Zoraxy's source IP changes, update the trusted IP
+in both copies of `deploy/run-container.sh` and redeploy the backend.
+
+Public URLs are `https://member.sgcc-wiki.org/api/docs` (Swagger),
+`https://member.sgcc-wiki.org/api/openapi.json` (schema), and
+`https://member.sgcc-wiki.org/api/health/` (health). A request to `/api/docs/`
+redirects to `/api/docs`; `/api/health` redirects to `/api/health/`, preserving
+HTTPS and the prefix. Docker's internal `/health/` check continues to work.
+
 The frontend builds with `VITE_API_BASE_URL=/api`, including its Axios client.
 Changing that URL requires rebuilding the frontend image. If you choose a
 separate API origin, configure the necessary backend CORS policy separately.
