@@ -34,6 +34,14 @@ Required plugins are Pipeline (including Declarative), Git, Credentials Binding
 and Lockable Resources. Install Lockable Resources if the existing Jenkins
 installation does not have it.
 
+Install the compression tool once as root inside the Jenkins Docker worker
+LXC (CT 113), so image compression can run before the guest transfer:
+
+```sh
+apt-get update
+apt-get install -y zstd
+```
+
 Create two **Pipeline from SCM** jobs, each using branch `main` and script path
 `Jenkinsfile`:
 

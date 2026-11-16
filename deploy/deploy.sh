@@ -21,7 +21,11 @@ if [[ ! $IMAGE_REF =~ ^${SERVICE}:[a-zA-Z0-9_.-]+$ ]]; then
     exit 1
 fi
 
-command -v zstd >/dev/null
+if ! command -v zstd >/dev/null; then
+    echo 'zstd is missing on the Jenkins Docker worker.' >&2
+    echo 'Install it as root in the worker LXC: apt-get update && apt-get install -y zstd' >&2
+    exit 1
+fi
 if [[ $SSH_USER != root ]]; then
     echo 'The deployment credential must use root inside the unprivileged LXC.' >&2
     exit 1
