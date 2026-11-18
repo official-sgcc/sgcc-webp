@@ -9,6 +9,8 @@ from .routers.user import user_router
 from .routers.group import group_router
 from .routers.schedule import schedule_router
 from .routers.signup import signup_router
+from .routers.login import login_router
+from .routers.test import test_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,3 +24,5 @@ app.include_router(user_router)
 app.include_router(group_router)
 app.include_router(schedule_router)
 app.include_router(signup_router)
+app.include_router(login_router)
+app.include_router(test_router)

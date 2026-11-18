@@ -44,3 +44,7 @@ class UserSignUp(BaseModel):
     role: str | None
     image: str | None
     password: str
+
+class UserLogin(BaseModel):
+    username: str       #학번
+    password: str       #비밀번호
