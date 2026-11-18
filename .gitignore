@@ -306,6 +306,7 @@ cython_debug/
 !web/package.json
 !web/package-lock.json
 !web/tsconfig.json
+!openapi.json
 
 # Local benchmark media and outputs
 data/
