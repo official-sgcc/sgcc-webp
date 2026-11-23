@@ -4,6 +4,7 @@ from ..internal.database import SessionDep
 from ..models.group import GroupPost
 from ..models.response import GroupResponse, GroupListResponse, BaseResponse
 from ..internal import group as group_internal
+from ..internal.auth import UserDep
 
 group_router = APIRouter(prefix="/v1/group")
 
@@ -45,3 +46,24 @@ def delete_group(
     group_internal.delete_group(session=session, group_id=group_id)
     
     return BaseResponse(data="")
+
+@group_router.post("/{group_id}/user/{user_id}", response_model=GroupResponse)
+def add_user_to_group(
+    session: SessionDep,
+    group_id: UUID,
+    user_id: UUID,
+    current_user: UserDep
+):
+    return GroupResponse(data=group_internal.add_user_to_group(session=session, group_id=group_id, user_id=user_id, current_user=current_user))
+
+@group_router.delete("/{group_id}/user/{user_id}", response_model=GroupResponse)
+def delete_user_from_group(
+    session: SessionDep,
+    group_id: UUID,
+    user_id: UUID,
+    current_user: UserDep
+):
+    group_internal.delete_user_from_group(session=session, group_id=group_id, user_id=user_id, current_user=current_user)
+
+    return BaseResponse(data="")
+
