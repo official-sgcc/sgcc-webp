@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Any
+from typing import Any, Optional
 
 from .user import UserPublic, UserStatus
 from .group import GroupPublic
@@ -38,11 +38,13 @@ class ScheduleResponse(BaseResponse):
 class UserSignUp(BaseModel):
     name: str
     student_id: str
-    grade: int
-    phone: str | None
-    status: UserStatus
-    role: str | None
-    image: str | None
+    username: str
+    email: str
+    grade: Optional[int] = None
+    phone: Optional[str] = None
+    status: Optional[UserStatus] = None
+    role: Optional[str] = None
+    image: Optional[str] = None
     password: str
 
 class UserLogin(BaseModel):

@@ -20,10 +20,11 @@ class UserRole(Enum):
 class UserBase(SQLModel):
     name: str
     student_id: str = Field(unique=True)
+    email: str
     grade: int | None = Field(default=None)
-    role: UserRole = Field(index=True, default=UserRole.MEMBER)
+    role: UserRole | None = Field(index=True, default=UserRole.MEMBER)
     phone: str | None = Field(default=None)
-    status: UserStatus = Field(index=True)
+    status: UserStatus | None = Field(index=True)
     image: str | None = Field(default=None)
 
 class User(UserBase, table=True):
@@ -38,6 +39,6 @@ class UserPost(UserBase):
 
 class UserAccount(SQLModel, table=True):
     user_id: UUID = Field(primary_key=True, foreign_key="user.id")
-    student_id: str = Field(index=True, unique=True)
+    username: str = Field(index=True, unique=True)
     hashed_password: str
     

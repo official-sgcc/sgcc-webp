@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 from ..internal.database import Session
 from ..models.group import Group, GroupPost
-from ..models.user import User
+from ..models.user import User, UserRole
 from ..models.schedule import Schedule
 from ..models.response import GroupResponse, GroupListResponse, GroupDetail, BaseResponse
 
@@ -90,7 +90,7 @@ def add_user_to_group(
     user_id: UUID,
     current_user: User
 ):
-    if current_user.role != "관리자":
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Access Denied")
     
     group = session.get(Group, group_id)
@@ -118,7 +118,7 @@ def delete_user_from_group(
     user_id: UUID,
     current_user: User
 ):
-    if current_user.role != "관리자":
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Access Denied")
     
     group = session.get(Group, group_id)

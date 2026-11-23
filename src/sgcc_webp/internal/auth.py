@@ -3,7 +3,7 @@ from sqlmodel import select
 from typing import Annotated
 from fastapi import HTTPException, Depends
 from .database import SessionDep, get_session
-from ..models.user import User, UserAccount
+from ..models.user import User, UserAccount, UserRole
 from ..models.response import UserSignUp, UserDetail
 from datetime import UTC, datetime, timedelta
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -34,13 +34,12 @@ def user_sign_up(
         raise HTTPException(status_code=409, detail="Student ID already exists")
     
     user = User.model_validate(user_data)
-
     session.add(user)
     session.flush()
 
     hashed_password = get_password_hash(user_data.password)
 
-    user_account = UserAccount(user_id=user.id, student_id=user.student_id, hashed_password=hashed_password)
+    user_account = UserAccount(user_id=user.id, username=user_data.username, hashed_password=hashed_password)
 
     session.add(user_account)
     session.commit()
@@ -55,7 +54,7 @@ def authenticate_user(
     username: str,
     password: str
 ) -> User | None:
-    user_account = session.exec(select(UserAccount).where(UserAccount.student_id == username)).first()
+    user_account = session.exec(select(UserAccount).where(UserAccount.username == username)).first()
 
     if user_account is None:
         verify_password(password, DUMMY_HASH)
