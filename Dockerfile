@@ -15,7 +15,7 @@ COPY src ./src
 RUN uv sync --locked --no-dev --no-editable
 
 
-FROM python:3.13-slim-bookworm
+FROM python:3.13-slim-bookworm AS runtime
 
 ENV PORT=8080 \
     HOST=0.0.0.0 \
@@ -42,3 +42,9 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
     CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.environ.get('UVICORN_PORT', '8080') + '/health/', timeout=2)"
 
 CMD ["uvicorn", "sgcc_webp:app"]
+
+FROM runtime AS ci
+WORKDIR /home/appuser
+COPY --chown=appuser:appuser frontend/test.db ./database.db
+
+FROM runtime AS release
