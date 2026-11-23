@@ -51,7 +51,7 @@ pipeline {
 
         stage('Build image') {
             steps {
-                sh 'docker build --pull --network=host --platform=linux/amd64 --tag "$IMAGE_REF" .'
+                sh 'docker build --pull --network=host --platform=linux/amd64 --target ci --tag "$IMAGE_REF" .'
             }
         }
 
