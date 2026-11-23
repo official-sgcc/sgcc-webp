@@ -2,7 +2,7 @@ from pwdlib import PasswordHash
 from sqlmodel import select
 from typing import Annotated
 from fastapi import HTTPException, Depends
-from .database import SessionDep
+from .database import SessionDep, get_session
 from ..models.user import User, UserAccount
 from ..models.response import UserSignUp, UserDetail
 from datetime import UTC, datetime, timedelta
@@ -16,7 +16,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 password_hash = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/login/")
 
 def get_password_hash(password: str) -> str:
     return password_hash.hash(password)
@@ -114,3 +114,18 @@ def verify_token(
     
     return username
 
+def get_current_user(
+    session: SessionDep,
+    student_id: Annotated[str | None, Depends(verify_token)]
+) -> User:
+    if student_id is None:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user = session.exec(select(User).where(User.student_id == student_id)).first()
+
+    if user is None:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    return user
+
+UserDep = Annotated[User, Depends(get_current_user)]

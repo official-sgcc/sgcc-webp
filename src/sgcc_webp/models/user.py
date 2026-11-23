@@ -13,18 +13,22 @@ class UserStatus(Enum):
     LEAVE = "휴학"
     GRADUATE = "졸업"
 
+class UserRole(Enum):
+    ADMIN = "관리자"
+    MEMBER = "회원"
+
 class UserBase(SQLModel):
-    name: str                                           #이름
-    student_id: str = Field(unique=True)                #학번
-    grade: int                                          #학년
-    phone: str | None = Field(default=None)             #전화번호
-    status: UserStatus = Field(index=True)              #학적
-    role: str | None = Field(index=True, default=None)  #직책
-    image: str | None = Field(default=None)             #사진 url
+    name: str
+    student_id: str = Field(unique=True)
+    grade: int | None = Field(default=None)
+    role: UserRole = Field(index=True, default=UserRole.MEMBER)
+    phone: str | None = Field(default=None)
+    status: UserStatus = Field(index=True)
+    image: str | None = Field(default=None)
 
 class User(UserBase, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    groups: list["Group"] = Relationship(back_populates="users", link_model=UserGroupLink)        #소모임 id
+    groups: list["Group"] = Relationship(back_populates="users", link_model=UserGroupLink)
 
 class UserPublic(UserBase):
     id: UUID
