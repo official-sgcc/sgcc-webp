@@ -69,12 +69,16 @@ def post_schedule(
 
 def delete_schedule(
     session: SessionDep,
-    schedule_id: UUID
+    schedule_id: UUID,
+    group_id: UUID
 ):
     schedule = session.get(Schedule, schedule_id)
 
     if schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
+
+    if schedule.group_id != group_id:
+        raise HTTPException(status_code=404, detail="schedule is not in group")
 
     session.delete(schedule)
     session.commit()

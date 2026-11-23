@@ -39,6 +39,6 @@ def delete_schedule(
     group_id: UUID,
     schedule_id: UUID
 ):
-    schedule_internal.delete_schedule(session=session, schedule_id=schedule_id)
+    schedule_internal.delete_schedule(session=session, schedule_id=schedule_id, group_id=group_id)
     
     return BaseResponse(data="")
